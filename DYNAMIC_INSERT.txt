@@ -1,0 +1,23 @@
+DECLARE @DatabaseName VARCHAR(50) = 'kings';
+
+DECLARE @SQL NVARCHAR(MAX) = '';
+
+SELECT @SQL = @SQL + 'SELECT ' + STRING_AGG(QUOTENAME(c.name), ',') WITHIN GROUP (ORDER BY c.column_id) + ' FROM ' + QUOTENAME(s.name) + '.' + QUOTENAME(t.name) + ';' + CHAR(10)
+FROM sys.tables t
+INNER JOIN sys.schemas s ON t.schema_id = s.schema_id
+INNER JOIN sys.columns c ON c.object_id = t.object_id
+WHERE t.type = 'U'
+AND s.name <> 'sys'
+AND s.name <> 'INFORMATION_SCHEMA'
+AND t.name <> 'sysdiagrams'
+AND t.name <> 'dtproperties'
+AND t.name <> 'MSreplication_options'
+AND t.name <> 'MSpeer_lsns'
+AND t.name <> 'MSpeer_originatorid_history'
+AND t.name <> 'MSrepl_transactions'
+AND t.name <> 'MSreplication_objects'
+AND t.name <> 'MSsubscription_properties'
+AND t.name <> 'MSsubscription_agents'
+AND t.name <> 'sysssislog';
+
+SELECT @SQL;

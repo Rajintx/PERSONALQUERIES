@@ -1,0 +1,16 @@
+SELECT OBJECT_NAME(fq.OBJECT_ID) AS TableName,
+fq.name AS IndexName, qs.index_type_desc AS IndexType,
+
+qs.avg_fragmentation_in_percent
+
+FROM sys.dm_db_index_physical_stats(DB_ID(), NULL, NULL, NULL, NULL) qs
+
+INNER JOIN sys.indexes fq
+
+ON fq.object_id = qs.object_id
+
+AND fq.index_id = qs.index_id
+
+WHERE qs.avg_fragmentation_in_percent > 0 and  qs.index_type_desc<>'heap'
+
+ORDER BY qs.avg_fragmentation_in_percent DESC
