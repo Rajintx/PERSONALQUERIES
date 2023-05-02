@@ -1,0 +1,474 @@
+
+ CREATE or alter procedure disable_trigger
+ --DECLARE 
+ @db VARCHAR(MAX)='E',
+ 
+ @SQL VARCHAR(MAX)='%'
+ as
+ SELECT @SQL  ='
+ALTER TABLE ' + @dB+'..ABBMAIN DISABLE TRIGGER ALL
+ 
+ALTER TABLE  ' + @dB+'..ABBTRAN DISABLE TRIGGER ALL
+ 
+ALTER TABLE ' + @dB+'..ABBPROD DISABLE TRIGGER ALL
+ 
+ 
+ 
+ALTER TABLE ' + @dB+'..TRNMAIN DISABLE TRIGGER ALL
+ 
+ALTER TABLE ' + @dB+'..TRNTRAN DISABLE TRIGGER ALL
+ 
+ALTER TABLE ' + @dB+'..TRNPROD DISABLE TRIGGER ALL
+  '
+print 'disable_trigger'
+ EXEC (@SQL)
+
+
+ 
+ GO 
+ CREATE or alter procedure ENABLE_trigger
+ --DECLARE 
+ @db VARCHAR(MAX)='e',
+ 
+ @SQL VARCHAR(MAX)='%'
+ as
+ SELECT @SQL  ='
+ALTER TABLE ' + @dB+'..ABBMAIN ENABLE TRIGGER ALL
+ 
+ALTER TABLE  ' + @dB+'..ABBTRAN ENABLE TRIGGER ALL
+ 
+ALTER TABLE ' + @dB+'..ABBPROD ENABLE TRIGGER ALL
+ 
+ 
+ 
+ALTER TABLE ' + @dB+'..TRNMAIN ENABLE TRIGGER ALL
+ 
+ALTER TABLE ' + @dB+'..TRNTRAN ENABLE TRIGGER ALL
+ 
+ALTER TABLE ' + @dB+'..TRNPROD ENABLE TRIGGER ALL
+  '
+print 'enable_trigger'
+ EXEC (@SQL)
+
+ 
+ GO
+CREATE or alter proc clonedb
+
+ --Declare
+ 
+@Dbsource varchar(100)='NMCCOOPSHOP',--NEW
+@Dbdestination varchar(100)='NMCCOOPSHOP_7879',--OLD
+@Backuploc varchar(100)='E:\data\NMCCOOPSHOP_test.bak',
+@MDFLDFloc varchar(100)='E:\data\',
+@sql varchar(max)='%',
+@mdflogic varchar(max)='%',
+@ldflogic varchar(max)='%'
+
+  as
+
+
+  SELECT @ldflogic=  f.name   FROM sys.master_files f
+INNER JOIN sys.databases d ON d.database_id = f.database_id WHERE D.name =@Dbsource AND f.type_desc='log' 
+
+--PRINT @LDFLOGIC
+
+  SELECT  @mdflogic =f.name   FROM sys.master_files f
+INNER JOIN sys.databases d ON d.database_id = f.database_id WHERE D.name =@Dbsource AND f.type_desc='rows'
+ 
+
+ 
+ 
+ set @MDFLDFloc= (select  left(@Backuploc,len(@Backuploc)-CHARINDEX('\',reverse(@Backuploc))+1));
+
+
+
+set @sql = 'BACKUP DATABASE '+@Dbsource+ ' TO DISK ='+''''+@Backuploc+''''+' RESTORE DATABASE '+@Dbdestination+' FROM DISK = '+''''+@Backuploc+''''+' WITH MOVE '+''''+@mdflogic+''''+'  TO ' +''''+@MDFLDFloc+@Dbdestination+'.mdf'+''''   +', 
+MOVE '+''''+@ldflogic+''''+' TO ' +''''+@MDFLDFloc+@Dbdestination+'.ldf'+''''  
+ --print @sql
+print 'Clone_DB'
+EXEC(@SQL)
+
+
+	
+	GO
+
+--REORGANIZE INDEX
+
+ CREATE or alter procedure ReOrgINdex
+			 -- declare
+ @db   varchar (max)='%',
+@sql Nvarchar (max)='%'
+			 
+			 as
+			 
+SET @SQL=' USE ' +@db+' ' 
+ 
+ 
+
+ SET @sql =@SQL+ STUFF((
+            SELECT ';' + 'alter index ' +a.name+ ' on '+ b.name +' Reorganize' 
+            FROM  sys.indexes a join sys.objects b on a.object_id = b.object_id where a.type_desc='clustered' and b.type = 'u' 
+            FOR XML PATH(''), TYPE
+    ).value('.', 'Nvarchar(max)')
+            , 1, 1, '')
+
+
+ print 'Reorganize Index'
+ exec (@sql)
+
+
+
+
+ --DATABASE MA 7980 DELETE (NEW FISCAL YEAR KO DATA DELETE GARNE)
+  go
+ 
+  CREATE or alter PROC DELETE_CURRENTFY
+--DECLARE
+@FY VARCHAR(25)='79/80',
+@DBOLD VARCHAR(100)='NMCCOOPSHOP_7879',
+@SQL NVARCHAR(MAX)='%'
+ AS
+
+
+
+SET @SQL= 'USE '+@DBOLD+'
+ALTER DATABASE ' +@dBOLD +' SET RECOVERY SIMPLE'+'
+delete FROM '+@DBOLD +'..LOGPROD WHERE PHISCALID = '+''''+@FY+'''
+DELETE FROM '+@DBOLD +'..LOGTRAN WHERE PHISCALID = '+''''+@FY+'''
+DELETE FROM '+@DBOLD +'..LOGMAIN WHERE PHISCALID = '+''''+@FY+'''
+ 
+DELETE FROM '+@DBOLD +'..PURTRAN WHERE PHISCALID = '+''''+@FY+'''
+DELETE FROM '+@DBOLD +'..PURPROD WHERE PHISCALID = '+''''+@FY+'''
+DELETE FROM '+@DBOLD +'..PURPROD_DETAIL WHERE PHISCALID = '+''''+@FY+'''
+
+if exists(select * FROM '+@DBOLD +'.INFORMATION_SCHEMA.COLUMNS where TABLE_NAME = ''PURPROD_SUMMARY'')
+DELETE FROM '+@DBOLD +'..PURPROD_SUMMARY WHERE PHISCALID = '+''''+@FY+'''
+DELETE FROM '+@DBOLD +'..PURMAIN WHERE PHISCALID = '+''''+@FY+'''
+
+
+ 
+DELETE FROM '+@DBOLD +'..ABBTRAN WHERE PHISCALID = '+''''+@FY+'''
+DELETE FROM '+@DBOLD +'..ABBPROD WHERE PHISCALID = '+''''+@FY+'''
+
+if exists(select * FROM '+@DBOLD +'.INFORMATION_SCHEMA.COLUMNS where TABLE_NAME = ''ABBPROD_SUMMARY'')
+DELETE FROM '+@DBOLD +'..ABBPROD_SUMMARY WHERE PHISCALID = '+''''+@FY+'''
+
+DELETE FROM '+@DBOLD +'..ABBMAIN WHERE PHISCALID = '+''''+@FY+'''
+ 
+
+
+ 
+DELETE FROM '+@DBOLD +'..TRNTRAN WHERE PHISCALID = '+''''+@FY+'''
+DELETE FROM '+@DBOLD +'..TRNPROD WHERE PHISCALID = '+''''+@FY+'''
+if exists(select * FROM '+@DBOLD +'.INFORMATION_SCHEMA.COLUMNS where TABLE_NAME = ''TRNPROD_SUMMARY'')
+DELETE FROM '+@DBOLD +'..TRNPROD_SUMMARY WHERE PHISCALID = '+''''+@FY+'''
+
+
+DELETE FROM '+@DBOLD +'..TRNMAIN WHERE PHISCALID = '+''''+@FY+'''
+ 
+
+ 
+DELETE FROM '+@DBOLD +'..RMD_TRNPROD_STATUS  WHERE PHISCALID = '+''''+@FY+'''
+ 
+DELETE FROM '+@DBOLD +'..RMD_BILLTENDER WHERE PHISCALID = '+''''+@FY+'''
+ 
+DELETE FROM '+@DBOLD +'..TBLBILLTENDER WHERE PHISCALID = '+''''+@FY+'''
+ 
+DELETE FROM '+@DBOLD +'..ACCTRAN WHERE PHISCALID = '+''''+@FY+'''
+DELETE FROM '+@DBOLD +'..RMD_JOURNAL WHERE PHISCALID = '+''''+@FY+'''
+DELETE FROM '+@DBOLD +'..ACCMAIN WHERE PHISCALID = '+''''+@FY+'''
+ 
+DELETE FROM '+@DBOLD +'..INVTRAN WHERE PHISCALID = '+''''+@FY+'''
+DELETE FROM '+@DBOLD +'..INVPROD WHERE PHISCALID = '+''''+@FY+'''
+
+if exists(select * FROM '+@DBOLD +'.INFORMATION_SCHEMA.COLUMNS where TABLE_NAME = ''INVPROD_SUMMARY'')
+DELETE FROM '+@DBOLD +'..INVPROD_SUMMARY WHERE PHISCALID = '+''''+@FY+'''
+DELETE FROM '+@DBOLD +'..STOCKADJUSTMENTPROD WHERE PHISCALID = '+''''+@FY+'''
+DELETE FROM '+@DBOLD +'..INVMAIN WHERE PHISCALID = '+''''+@FY+'''
+ 
+DELETE FROM '+@DBOLD +'..LOGRMDJOURNAL WHERE PHISCALID = '+''''+@FY+'''
+ 
+DELETE FROM '+@DBOLD +'..OPTRAN WHERE PHISCALID = '+''''+@FY+'''
+DELETE FROM '+@DBOLD +'..OPPROD WHERE PHISCALID = '+''''+@FY+'''
+
+if exists(select * FROM '+@DBOLD +'.INFORMATION_SCHEMA.COLUMNS where TABLE_NAME = ''OPPROD_SUMMARY'')
+DELETE FROM '+@DBOLD +'..OPPROD_SUMMARY WHERE PHISCALID = '+''''+@FY+'''
+DELETE FROM '+@DBOLD +'..OPMAIN WHERE PHISCALID = '+''''+@FY+'''
+ 
+DELETE FROM '+@DBOLD +'..AOPTRAN WHERE PHISCALID = '+''''+@FY+'''
+DELETE FROM '+@DBOLD +'..AOPMAIN WHERE PHISCALID = '+''''+@FY+'''
+ 
+DELETE FROM '+@DBOLD +'..RMD_ORDERPROD WHERE PHISCALID = '+''''+@FY+'''
+DELETE FROM '+@DBOLD +'..RMD_ORDERMAIN WHERE PHISCALID = '+''''+@FY+'''
+ 
+DELETE FROM '+@DBOLD +'..RMD_TRNPRODS WHERE PHISCALID = '+''''+@FY+'''
+DELETE FROM '+@DBOLD +'..RMD_TRNMAINS WHERE PHISCALID = '+''''+@FY+'''
+if exists(select * FROM '+@DBOLD +'.INFORMATION_SCHEMA.COLUMNS where TABLE_NAME = ''TMPRMD_TRNTRAN'')
+DELETE FROM '+@DBOLD +'..TMPRMD_TRNTRAN WHERE PHISCALID = '+''''+@FY+'''
+
+if exists(select * FROM '+@DBOLD +'.INFORMATION_SCHEMA.COLUMNS where TABLE_NAME = ''INVprod_TMP'')
+DELETE FROM '+@DBOLD +'..INVprod_TMP WHERE PHISCALID = '+''''+@FY+'''
+if exists(select * FROM '+@DBOLD +'.INFORMATION_SCHEMA.COLUMNS where TABLE_NAME = ''INVMAIN_TMP'')
+DELETE FROM '+@DBOLD +'..INVMAIN_TMP WHERE PHISCALID = '+''''+@FY+'''
+if exists(select * FROM '+@DBOLD +'.INFORMATION_SCHEMA.COLUMNS where TABLE_NAME = ''tempInvMains'')
+DELETE FROM '+@DBOLD +'..tempInvMains WHERE PHISCALID = '+''''+@FY+'''
+ 
+DELETE FROM '+@DBOLD +'..tblUserWorkingLog  WHERE TRNDATE > ( (
+ SELECT Begindate FROM '+@DBOLD +'..PhiscalYear WHERE PhiscalID = '+''''+@FY+'''))
+ 
+
+ALTER DATABASE ' +@dBOLD +' SET RECOVERY FULL'+''
+
+ 
+ print 'DELETE_CURRENTFY'
+ EXEC (@SQL)
+ 
+
+
+
+---FOR NEW FY (DELETING IN LIVE (OLD FY DATA))
+
+ GO 
+ CREATE OR ALTER PROC DELETE_OLDFY
+--FROM NEW DB(LIVE DB)
+--DECLARE
+@FY VARCHAR(25)='%',
+@DBNEW VARCHAR(100)='%',
+@SQL VARCHAR(MAX)='%'
+ 
+ AS
+
+
+SET @SQL= 'USE '+@DBNEW+'
+ALTER DATABASE ' +@DBNEW +' SET RECOVERY SIMPLE'+'
+
+delete FROM '+@DBNEW +'..LOGPROD WHERE PHISCALID <> '+''''+@FY+'''
+DELETE FROM '+@DBNEW +'..LOGTRAN WHERE PHISCALID <> '+''''+@FY+'''
+DELETE FROM '+@DBNEW +'..LOGMAIN WHERE PHISCALID <> '+''''+@FY+'''
+ 
+DELETE FROM '+@DBNEW +'..PURTRAN WHERE PHISCALID <> '+''''+@FY+'''
+DELETE FROM '+@DBNEW +'..PURPROD WHERE PHISCALID <> '+''''+@FY+'''
+DELETE FROM '+@DBNEW +'..PURPROD_DETAIL WHERE PHISCALID <> '+''''+@FY+'''
+
+if exists(select * FROM '+@DBNEW +'.INFORMATION_SCHEMA.COLUMNS where TABLE_NAME = ''PURPROD_SUMMARY'')
+DELETE FROM '+@DBNEW +'..PURPROD_SUMMARY WHERE PHISCALID <> '+''''+@FY+'''
+DELETE FROM '+@DBNEW +'..PURMAIN WHERE PHISCALID <> '+''''+@FY+'''
+
+
+ 
+DELETE FROM '+@DBNEW +'..ABBTRAN WHERE PHISCALID <> '+''''+@FY+'''
+DELETE FROM '+@DBNEW +'..ABBPROD WHERE PHISCALID <> '+''''+@FY+'''
+
+if exists(select * FROM '+@DBNEW +'.INFORMATION_SCHEMA.COLUMNS where TABLE_NAME = ''ABBPROD_SUMMARY'')
+DELETE FROM '+@DBNEW +'..ABBPROD_SUMMARY WHERE PHISCALID <> '+''''+@FY+'''
+
+DELETE FROM '+@DBNEW +'..ABBMAIN WHERE PHISCALID <> '+''''+@FY+'''
+ 
+
+
+ 
+DELETE FROM '+@DBNEW +'..TRNTRAN WHERE PHISCALID <> '+''''+@FY+'''
+DELETE FROM '+@DBNEW +'..TRNPROD WHERE PHISCALID <> '+''''+@FY+'''
+if exists(select * FROM '+@DBNEW +'.INFORMATION_SCHEMA.COLUMNS where TABLE_NAME = ''TRNPROD_SUMMARY'')
+DELETE FROM '+@DBNEW +'..TRNPROD_SUMMARY WHERE PHISCALID <> '+''''+@FY+'''
+
+
+DELETE FROM '+@DBNEW +'..TRNMAIN WHERE PHISCALID <> '+''''+@FY+'''
+ 
+
+ 
+DELETE FROM '+@DBNEW +'..RMD_TRNPROD_STATUS  WHERE PHISCALID <> '+''''+@FY+'''
+ 
+DELETE FROM '+@DBNEW +'..RMD_BILLTENDER WHERE PHISCALID <> '+''''+@FY+'''
+ 
+DELETE FROM '+@DBNEW +'..TBLBILLTENDER WHERE PHISCALID <> '+''''+@FY+'''
+ 
+DELETE FROM '+@DBNEW +'..ACCTRAN WHERE PHISCALID <> '+''''+@FY+'''
+DELETE FROM '+@DBNEW +'..RMD_JOURNAL WHERE PHISCALID <> '+''''+@FY+'''
+DELETE FROM '+@DBNEW +'..ACCMAIN WHERE PHISCALID <> '+''''+@FY+'''
+ 
+DELETE FROM '+@DBNEW +'..INVTRAN WHERE PHISCALID <> '+''''+@FY+'''
+DELETE FROM '+@DBNEW +'..INVPROD WHERE PHISCALID <> '+''''+@FY+'''
+
+if exists(select * FROM '+@DBNEW +'.INFORMATION_SCHEMA.COLUMNS where TABLE_NAME = ''INVPROD_SUMMARY'')
+DELETE FROM '+@DBNEW +'..INVPROD_SUMMARY WHERE PHISCALID <> '+''''+@FY+'''
+DELETE FROM '+@DBNEW +'..STOCKADJUSTMENTPROD WHERE PHISCALID <> '+''''+@FY+'''
+DELETE FROM '+@DBNEW +'..INVMAIN WHERE PHISCALID <> '+''''+@FY+'''
+ 
+DELETE FROM '+@DBNEW +'..LOGRMDJOURNAL WHERE PHISCALID <> '+''''+@FY+'''
+ 
+DELETE FROM '+@DBNEW +'..OPTRAN WHERE PHISCALID <> '+''''+@FY+'''
+DELETE FROM '+@DBNEW +'..OPPROD WHERE PHISCALID <> '+''''+@FY+'''
+
+if exists(select * FROM '+@DBNEW +'.INFORMATION_SCHEMA.COLUMNS where TABLE_NAME = ''OPPROD_SUMMARY'')
+DELETE FROM '+@DBNEW +'..OPPROD_SUMMARY WHERE PHISCALID <> '+''''+@FY+'''
+DELETE FROM '+@DBNEW +'..OPMAIN WHERE PHISCALID <> '+''''+@FY+'''
+ 
+DELETE FROM '+@DBNEW +'..AOPTRAN WHERE PHISCALID <> '+''''+@FY+'''
+DELETE FROM '+@DBNEW +'..AOPMAIN WHERE PHISCALID <> '+''''+@FY+'''
+ 
+DELETE FROM '+@DBNEW +'..RMD_ORDERPROD WHERE PHISCALID <> '+''''+@FY+'''
+DELETE FROM '+@DBNEW +'..RMD_ORDERMAIN WHERE PHISCALID <> '+''''+@FY+'''
+ 
+DELETE FROM '+@DBNEW +'..RMD_TRNPRODS WHERE PHISCALID <> '+''''+@FY+'''
+DELETE FROM '+@DBNEW +'..RMD_TRNMAINS WHERE PHISCALID <> '+''''+@FY+'''
+if exists(select * FROM '+@DBNEW +'.INFORMATION_SCHEMA.COLUMNS where TABLE_NAME = ''TMPRMD_TRNTRAN'')
+DELETE FROM '+@DBNEW +'..TMPRMD_TRNTRAN WHERE PHISCALID <> '+''''+@FY+'''
+if exists(select * FROM '+@DBNEW +'.INFORMATION_SCHEMA.COLUMNS where TABLE_NAME = ''INVprod_TMP'')
+DELETE FROM '+@DBNEW +'..INVprod_TMP WHERE PHISCALID <> '+''''+@FY+'''
+
+if exists(select * FROM '+@DBNEW +'.INFORMATION_SCHEMA.COLUMNS where TABLE_NAME = ''INVMAIN_TMP'')
+DELETE FROM '+@DBNEW +'..INVMAIN_TMP WHERE PHISCALID <> '+''''+@FY+'''
+
+if exists(select * FROM '+@DBNEW +'.INFORMATION_SCHEMA.COLUMNS where TABLE_NAME = ''tempInvMains'')
+
+DELETE FROM '+@DBNEW +'..tempInvMains WHERE PHISCALID <> '+''''+@FY+'''
+ 
+DELETE FROM '+@DBNEW +'..tblUserWorkingLog  WHERE TRNDATE < ( (
+ SELECT Begindate FROM '+@DBNEW +'..PhiscalYear WHERE PhiscalID = '+''''+@FY+'''))
+ALTER DATABASE ' +@DBNEW +' SET RECOVERY FULL'+''
+ 
+ print 'DELETE_OLDFY'
+ EXEC (@SQL)
+
+GO
+
+
+---SHRINKING AND TRUNCATING
+
+ CREATE OR ALTER PROC SHRINKTRUNCATE
+	--DECLARE
+@DB VARCHAR(100)='%',
+@SQL VARCHAR(MAX)='%',
+@mdflogic varchar(max)='%'
+
+  as
+
+
+
+
+  SELECT  @mdflogic =f.name   FROM sys.master_files f
+INNER JOIN sys.databases d ON d.database_id = f.database_id WHERE D.name =@db AND f.type_desc='rows'
+
+	
+SET @SQL='USE ' +@DB ;
+
+SELECT @SQL=@SQL+'
+ALTER DATABASE '+@DB  +' SET RECOVERY SIMPLE
+ 
+DBCC shrinkfile ('+@mdflogic+' ,1)
+ 
+ALTER DATABASE '+@DB  +'  SET RECOVERY FULL
+ 
+
+
+ALTER DATABASE '+@DB  +'  SET RECOVERY SIMPLE
+ 
+DBCC shrinkdatabase ( '+@DB  +',50)
+ 
+ALTER DATABASE '+@DB  +'  SET RECOVERY FULL
+ '
+  print 'Shrink and truncate'
+EXEC (@SQL)
+GO
+
+
+-----------------------start of automation-----------------------------------------------
+--Create OR ALTER PROC FYAUTOMATION
+DECLARE
+	@FY VARCHAR(25)='79/80',
+	@DBLIVE VARCHAR(100)='KATHMANDUSM',
+	@DBOLD VARCHAR (100)='KATHMANDUSM_old',
+	@Backuploc varchar(100)='D:\data\split\FY.BAK'
+		--as
+	EXEC clonedb 
+		@Dbsource =@dblive, 
+		@Dbdestination  =@DBOLD ,
+		@Backuploc  =@Backuploc
+
+	EXEC disable_trigger 
+		@DB=@DBOLD
+
+	EXEC DELETE_CURRENTFY
+ 
+		@FY =@FY,
+		@DBOLD =@DBOLD 
+ 
+	EXEC enable_trigger 
+		@DB=@DBOLD
+
+	EXEC ReOrgINdex
+		@db=@DBOLD
+	EXEC SHRINKTRUNCATE
+		@DB=@DBOLD
+
+ 
+	EXEC disable_trigger 
+		@DB=@DBLIVE
+
+	EXEC DELETE_OLDFY
+		--FROM LIVE
+ 
+		@FY =@FY,
+		@DBNEW =@DBLIVE 
+
+	EXEC enable_trigger 
+		@DB=@DBLIVE
+
+	EXEC ReOrgINdex
+		@db=@DBLIVE
+	EXEC SHRINKTRUNCATE
+		@DB=@dblive
+
+		
+
+
+
+/*
+EXEC FYAUTOMATION
+
+@FY  ='79/80',
+	@DBLIVE ='NMCCOOPSHOP',
+	@DBOLD  ='NMCCOOPSHOP_7879',
+	@Backuploc ='C:\IMS SOFTWARE\DATA\DATA_7879\FY.BAK'
+
+
+
+drop PROCedure FYAUTOMATION
+	drop PROCedure clonedb 
+		
+	drop PROCedure disable_trigger 
+	
+
+	drop PROCedure DELETE_CURRENTFY
+ 
+ 
+	drop PROCedure enable_trigger 
+		
+	drop PROCedure ReOrgINdex
+		
+	drop PROCedure SHRINKTRUNCATE
+	
+ 
+
+		
+	drop PROCedure DELETE_OLDFY
+		
+
+		
+
+		
+		
+
+
+
+
+
+
+
+ 
+
+
+
+
+*/
