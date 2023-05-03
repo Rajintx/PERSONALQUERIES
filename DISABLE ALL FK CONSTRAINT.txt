@@ -1,15 +1,14 @@
-DECLARE @DatabaseName VARCHAR(50) = 'YourDatabaseName';
-
 DECLARE @SQL NVARCHAR(MAX) = '';
 
-SELECT @SQL = @SQL +'INSERT INTO KINGS_REC..'+QUOTENAME(t.name)+ ' SELECT ' + STUFF((SELECT ',' + QUOTENAME(c.name)
-            FROM sys.columns c 
-            WHERE c.object_id = t.object_id
-            ORDER BY c.column_id
-            FOR XML PATH ('')), 1, 1, '') + ' FROM ' + QUOTENAME(s.name) + '.' + QUOTENAME(t.name) + ';' + CHAR(10)
+SELECT @SQL = @SQL + 'ALTER TABLE ' + QUOTENAME(s.name) + '.' + QUOTENAME(t.name) + ' NOCHECK CONSTRAINT ALL;' + CHAR(10)
 FROM sys.tables t
 INNER JOIN sys.schemas s ON t.schema_id = s.schema_id
 WHERE t.type = 'U'
+AND EXISTS (
+    SELECT *
+    FROM sys.foreign_keys fk
+    WHERE fk.parent_object_id = t.object_id
+)
 AND s.name <> 'sys'
 AND s.name <> 'INFORMATION_SCHEMA'
 AND t.name <> 'sysdiagrams'
@@ -23,4 +22,4 @@ AND t.name <> 'MSsubscription_properties'
 AND t.name <> 'MSsubscription_agents'
 AND t.name <> 'sysssislog';
 
-select @SQL;
+SELECT @SQL;
