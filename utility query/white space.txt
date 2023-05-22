@@ -1,0 +1,24 @@
+with cte as (
+SELECT BATCHCODE AS INPUT,
+    LTRIM(RTRIM(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+        REPLACE(
+        REPLACE(
+        REPLACE(
+        REPLACE(
+        REPLACE(BATCHCODE,CHAR(10),' ')
+        ,CHAR(11),' ')
+        ,CHAR(12),' ')
+        ,CHAR(13),' ')
+        ,CHAR(14),' ')
+        ,CHAR(160),' ')
+        ,CHAR(13)+CHAR(10),' ')
+    ,CHAR(9),' ')
+    ,' ',CHAR(17)+CHAR(18))
+    ,CHAR(18)+CHAR(17),'')
+    ,CHAR(17)+CHAR(18),' ')
+    )) AS [OUTPUT]
+FROM BATCHPRICE_MASTER 
+)
+select * from cte where DATALENGTH(INPUT)<>DATALENGTH([OUTPUT])
+--update cte set input=output where DATALENGTH(INPUT)<>DATALENGTH([OUTPUT])
+
