@@ -1,0 +1,13 @@
+teletalk
+
+
+select SUM(dlqty) dlqty,INVNO,tiqty, mcode  from (
+select a.VCHRNO,sum(b.dlq)dlqty,a.INVNO, sum(c.tiq)tiqty,b.mcode from RMD_TRNPROD_STATUS a 
+left join (select vchrno ,mcode, sum(REALQTY_IN) dlq from rmd_trnprod   where VCHRNO like 'dl%' group by VCHRNO,MCODE)b on a.VCHRNO = b.VCHRNO and b.mcode=a.mcode
+left join (select vchrno ,mcode , sum(REALQTY) tiq from rmd_trnprod   where VCHRNO like 'ti%' group by VCHRNO,mcode) c on a.INVNO = c.VCHRNO   and c.mcode=a.mcode
+ 
+and a.VCHRNO like 'dl%'
+group by a.VCHRNO , a.INVNO,b.MCODE
+)a group by INVNO,tiqty,MCODE
+having tiqty<> SUM(dlqty)
+ 
