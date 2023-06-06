@@ -176,6 +176,10 @@ DELETE FROM '+@DBOLD +'..TBLBILLTENDER WHERE PHISCALID = '+''''+@FY+'''
  
 DELETE FROM '+@DBOLD +'..ACCTRAN WHERE PHISCALID = '+''''+@FY+'''
 DELETE FROM '+@DBOLD +'..RMD_JOURNAL WHERE PHISCALID = '+''''+@FY+'''
+
+if exists(select * FROM '+@DBOLD +'.INFORMATION_SCHEMA.COLUMNS where TABLE_NAME = ''RMD_BILLTRACK'')
+DELETE FROM '+@DBOLD +'..RMD_BILLTRACK WHERE PHISCALID = '+''''+@FY+'''
+
 DELETE FROM '+@DBOLD +'..ACCMAIN WHERE PHISCALID = '+''''+@FY+'''
  
 DELETE FROM '+@DBOLD +'..INVTRAN WHERE PHISCALID = '+''''+@FY+'''
@@ -285,6 +289,9 @@ DELETE FROM '+@DBNEW +'..TBLBILLTENDER WHERE PHISCALID <> '+''''+@FY+'''
  
 DELETE FROM '+@DBNEW +'..ACCTRAN WHERE PHISCALID <> '+''''+@FY+'''
 DELETE FROM '+@DBNEW +'..RMD_JOURNAL WHERE PHISCALID <> '+''''+@FY+'''
+
+if exists(select * FROM '+@DBNEW +'.INFORMATION_SCHEMA.COLUMNS where TABLE_NAME = ''RMD_BILLTRACK'')
+DELETE FROM '+@DBNEW +'..RMD_BILLTRACK WHERE PHISCALID <> '+''''+@FY+'''
 DELETE FROM '+@DBNEW +'..ACCMAIN WHERE PHISCALID <> '+''''+@FY+'''
  
 DELETE FROM '+@DBNEW +'..INVTRAN WHERE PHISCALID <> '+''''+@FY+'''
@@ -372,7 +379,7 @@ ALTER DATABASE '+@DB  +'  SET RECOVERY FULL
 EXEC (@SQL)
 GO
 
-
+/*
 -----------------------start of automation-----------------------------------------------
 --Create OR ALTER PROC FYAUTOMATION
 DECLARE
@@ -381,11 +388,12 @@ DECLARE
 	@DBOLD VARCHAR (100)='KATHMANDUSM_old',
 	@Backuploc varchar(100)='D:\data\split\FY.BAK'
 		--as
-	EXEC clonedb 
+	
+	/*EXEC clonedb 
 		@Dbsource =@dblive, 
 		@Dbdestination  =@DBOLD ,
 		@Backuploc  =@Backuploc
-
+		*/
 	EXEC disable_trigger 
 		@DB=@DBOLD
 
@@ -420,7 +428,7 @@ DECLARE
 	EXEC SHRINKTRUNCATE
 		@DB=@dblive
 
-		
+	*/	
 
 
 
