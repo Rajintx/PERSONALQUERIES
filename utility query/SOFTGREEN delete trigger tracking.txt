@@ -1,0 +1,317 @@
+ 
+
+CREATE    TRIGGER [dbo].[TRIGGER_AUDIT_INVMAIN] ON [dbo].[INVMAIN]
+FOR Insert,update,delete
+    AS
+	SET XACT_ABORT OFF; 
+	DECLARE @DeletedJson nvarchar(max); 
+	SET @DeletedJson = (select * from deleted  for json auto) 
+	EXEC spSaveAuditLog @TableName = N'INVMAIN' , @InsertedJson='',  @DeletedJson = @DeletedJson;
+GO
+
+ALTER TABLE [dbo].[INVMAIN] ENABLE TRIGGER [TRIGGER_AUDIT_INVMAIN]
+
+GO
+ 
+
+CREATE    TRIGGER [dbo].[TRIGGER_AUDIT_INVTRAN] ON [dbo].[INVTRAN]
+FOR Insert,update,delete
+    AS
+	SET XACT_ABORT OFF; 
+	DECLARE @DeletedJson nvarchar(max); 
+	SET @DeletedJson = (select * from deleted  for json auto) 
+	EXEC spSaveAuditLog @TableName = N'INVTRAN' , @InsertedJson='',  @DeletedJson = @DeletedJson;
+GO
+
+ALTER TABLE [dbo].[INVTRAN] ENABLE TRIGGER [TRIGGER_AUDIT_INVTRAN]
+
+ 
+GO
+CREATE    TRIGGER [dbo].[TRIGGER_AUDIT_INVPROD] ON [dbo].[INVPROD]
+FOR Insert,update,delete
+    AS
+	SET XACT_ABORT OFF; 
+	DECLARE @DeletedJson nvarchar(max); 
+	SET @DeletedJson = (select * from deleted  for json auto) 
+	EXEC spSaveAuditLog @TableName = N'INVPROD' , @InsertedJson='',  @DeletedJson = @DeletedJson;
+GO
+
+ALTER TABLE [dbo].[INVPROD] ENABLE TRIGGER [TRIGGER_AUDIT_INVPROD]
+
+ 
+GO
+
+CREATE    TRIGGER [dbo].[TRIGGER_AUDIT_PURMAIN] ON [dbo].[PURMAIN]
+FOR Insert,update,delete
+    AS
+	SET XACT_ABORT OFF; 
+	DECLARE @DeletedJson nvarchar(max); 
+	SET @DeletedJson = (select * from deleted  for json auto) 
+	EXEC spSaveAuditLog @TableName = N'PURMAIN' , @InsertedJson='',  @DeletedJson = @DeletedJson;
+GO
+
+ALTER TABLE [dbo].[PURMAIN] ENABLE TRIGGER [TRIGGER_AUDIT_PURMAIN]
+
+ GO
+
+CREATE    TRIGGER [dbo].[TRIGGER_AUDIT_PURTRAN] ON [dbo].[PURTRAN]
+FOR Insert,update,delete
+    AS
+	SET XACT_ABORT OFF; 
+	DECLARE @DeletedJson nvarchar(max); 
+	SET @DeletedJson = (select * from deleted  for json auto) 
+	EXEC spSaveAuditLog @TableName = N'PURTRAN' , @InsertedJson='',  @DeletedJson = @DeletedJson;
+GO
+
+ALTER TABLE [dbo].[PURTRAN] ENABLE TRIGGER [TRIGGER_AUDIT_PURTRAN]
+
+GO
+
+ 
+
+CREATE    TRIGGER [dbo].[TRIGGER_AUDIT_PURPROD] ON [dbo].[PURPROD]
+FOR Insert,update,delete
+    AS
+	SET XACT_ABORT OFF; 
+	DECLARE @DeletedJson nvarchar(max); 
+	SET @DeletedJson = (select * from deleted  for json auto) 
+	EXEC spSaveAuditLog @TableName = N'PURPROD' , @InsertedJson='',  @DeletedJson = @DeletedJson;
+GO
+
+ALTER TABLE [dbo].[PURPROD] ENABLE TRIGGER [TRIGGER_AUDIT_PURPROD]
+
+GO
+CREATE    TRIGGER [dbo].[TRIGGER_AUDIT_OPMAIN] ON [dbo].[OPMAIN]
+FOR Insert,update,delete
+    AS
+	SET XACT_ABORT OFF; 
+	DECLARE @DeletedJson nvarchar(max); 
+	SET @DeletedJson = (select * from deleted  for json auto) 
+	EXEC spSaveAuditLog @TableName = N'OPMAIN' , @InsertedJson='',  @DeletedJson = @DeletedJson;
+GO
+
+ALTER TABLE [dbo].[OPMAIN] ENABLE TRIGGER [TRIGGER_AUDIT_OPMAIN]
+
+GO
+
+
+ 
+
+CREATE    TRIGGER [dbo].[TRIGGER_AUDIT_OPPROD] ON [dbo].[OPPROD]
+FOR Insert,update,delete
+    AS
+	SET XACT_ABORT OFF; 
+	DECLARE @DeletedJson nvarchar(max); 
+	SET @DeletedJson = (select * from deleted  for json auto) 
+	EXEC spSaveAuditLog @TableName = N'OPPROD' , @InsertedJson='',  @DeletedJson = @DeletedJson;
+GO
+
+ALTER TABLE [dbo].[OPPROD] ENABLE TRIGGER [TRIGGER_AUDIT_OPPROD]
+
+GO
+
+ 
+
+CREATE    TRIGGER [dbo].[TRIGGER_AUDIT_AOPMAIN] ON [dbo].[AOPMAIN]
+FOR Insert,update,delete
+    AS
+	SET XACT_ABORT OFF; 
+	DECLARE @DeletedJson nvarchar(max); 
+	SET @DeletedJson = (select * from deleted  for json auto) 
+	EXEC spSaveAuditLog @TableName = N'AOPMAIN' , @InsertedJson='',  @DeletedJson = @DeletedJson;
+GO
+
+ALTER TABLE [dbo].[AOPMAIN] ENABLE TRIGGER [TRIGGER_AUDIT_AOPMAIN]
+
+GO
+
+ 
+
+CREATE    TRIGGER [dbo].[TRIGGER_AUDIT_AOPTRAN] ON [dbo].[AOPTRAN]
+FOR Insert,update,delete
+    AS
+	SET XACT_ABORT OFF; 
+	DECLARE @DeletedJson nvarchar(max); 
+	SET @DeletedJson = (select * from deleted  for json auto) 
+	EXEC spSaveAuditLog @TableName = N'AOPTRAN' , @InsertedJson='',  @DeletedJson = @DeletedJson;
+GO
+
+ALTER TABLE [dbo].[AOPTRAN] ENABLE TRIGGER [TRIGGER_AUDIT_AOPTRAN]
+
+GO
+ 
+
+CREATE    TRIGGER [dbo].[TRIGGER_AUDIT_OPAMAIN] ON [dbo].[OPAMAIN]
+FOR Insert,update,delete
+    AS
+	SET XACT_ABORT OFF; 
+	DECLARE @DeletedJson nvarchar(max); 
+	SET @DeletedJson = (select * from deleted  for json auto) 
+	EXEC spSaveAuditLog @TableName = N'OPAMAIN' , @InsertedJson='',  @DeletedJson = @DeletedJson;
+GO
+
+ALTER TABLE [dbo].[OPAMAIN] ENABLE TRIGGER [TRIGGER_AUDIT_OPAMAIN]
+
+GO
+CREATE    TRIGGER [dbo].[TRIGGER_AUDIT_OPATRAN] ON [dbo].[OPATRAN]
+FOR Insert,update,delete
+    AS
+	SET XACT_ABORT OFF; 
+	DECLARE @DeletedJson nvarchar(max); 
+	SET @DeletedJson = (select * from deleted  for json auto) 
+	EXEC spSaveAuditLog @TableName = N'OPATRAN' , @InsertedJson='',  @DeletedJson = @DeletedJson;
+GO
+
+ALTER TABLE [dbo].[OPATRAN] ENABLE TRIGGER [TRIGGER_AUDIT_OPATRAN]
+
+GO
+CREATE    TRIGGER [dbo].[TRIGGER_AUDIT_ACCMAIN] ON [dbo].[ACCMAIN]
+FOR Insert,update,delete
+    AS
+	SET XACT_ABORT OFF; 
+	DECLARE @DeletedJson nvarchar(max); 
+	SET @DeletedJson = (select * from deleted  for json auto) 
+	EXEC spSaveAuditLog @TableName = N'ACCMAIN' , @InsertedJson='',  @DeletedJson = @DeletedJson;
+GO
+
+ALTER TABLE [dbo].[ACCMAIN] ENABLE TRIGGER [TRIGGER_AUDIT_ACCMAIN]
+
+GO
+CREATE    TRIGGER [dbo].[TRIGGER_AUDIT_ACCTRAN] ON [dbo].[ACCTRAN]
+FOR Insert,update,delete
+    AS
+	SET XACT_ABORT OFF; 
+	DECLARE @DeletedJson nvarchar(max); 
+	SET @DeletedJson = (select * from deleted  for json auto) 
+	EXEC spSaveAuditLog @TableName = N'ACCTRAN' , @InsertedJson='',  @DeletedJson = @DeletedJson;
+GO
+
+ALTER TABLE [dbo].[ACCTRAN] ENABLE TRIGGER [TRIGGER_AUDIT_ACCTRAN]
+
+GO
+
+
+
+ALTER   VIEW [dbo].[vwTableKeys]    
+AS    
+	SELECT 'MENUITEM' TableName, 'MCODE' KeyFielD    
+	
+	Union All   
+	SELECT 'BARCODE' TableName, 'MCODE,BCODE' KeyFielD    
+	
+	Union All    
+	SELECT 'Rmd_Aclist' TableName, 'ACID' KeyFielD  
+  
+	Union All    
+	SELECT 'Discount_Rate' TableName, 'DisID,Mgroup,Parent,Mcode' KeyFielD  
+  
+	Union All    
+	SELECT 'Discount_SchemeDiscount' TableName, 'DisID,Mgroup,Parent,Mcode' KeyFielD  
+    
+	Union All    
+	SELECT 'Discount_ComboList' TableName, 'DisID,comboId' KeyFielD  
+    
+	Union All    
+	SELECT 'Discount_IfAnyItemsList' TableName, 'DisID,Mcode' KeyFielD  
+    
+	Union All    
+	SELECT 'DISCOUNT_SCHEME' TableName, 'DisID' KeyFielD
+    
+	Union All    
+	SELECT 'Setting' TableName, '' KeyFielD
+
+	Union ALL
+	SELECT 'INVMAIN' TableName,'VCHRNO' KeyFielD 
+
+	Union ALL
+	SELECT 'INVTRAN' TableName,'VCHRNO' KeyFielD 
+
+	Union ALL
+	SELECT 'INVPROD' TableName,'VCHRNO' KeyFielD 
+		Union ALL
+	SELECT 'INVPROD_SUMMARY' TableName,'VCHRNO' KeyFielD 
+
+
+		Union ALL
+	SELECT 'PURMAIN' TableName,'VCHRNO' KeyFielD 
+
+	
+		Union ALL
+	SELECT 'PURTRAN' TableName,'VCHRNO' KeyFielD 
+		
+		Union ALL
+	SELECT 'PURPROD' TableName,'VCHRNO' KeyFielD 
+			
+		Union ALL
+	SELECT 'PURPROD_SUMMARY' TableName,'VCHRNO' KeyFielD 
+		Union ALL
+	SELECT 'OPAMAIN' TableName,'VCHRNO' KeyFielD 
+
+	
+		Union ALL
+	SELECT 'OPATRAN' TableName,'VCHRNO' KeyFielD 
+		
+		Union ALL
+	SELECT 'AOPMAIN' TableName,'VCHRNO' KeyFielD 
+			
+		Union ALL
+	SELECT 'AOPTRAN' TableName,'VCHRNO' KeyFielD 
+			Union ALL
+	SELECT 'OPMAIN' TableName,'VCHRNO' KeyFielD 
+			
+		Union ALL
+	SELECT 'OPPROD' TableName,'VCHRNO' KeyFielD 
+			Union ALL
+	SELECT 'ACCMAIN' TableName,'VCHRNO' KeyFielD 
+		Union ALL
+	SELECT 'ACCTRAN' TableName,'VCHRNO' KeyFielD 
+ 
+
+GO
+
+ 
+
+CREATE OR ALTER      PROC [dbo].[spSaveAuditLog] (@TableName varchar(50),  @InsertedJson nvarchar(max), @DeletedJson nvarchar(max))      
+AS      
+BEGIN TRY           
+ Declare @KeyValue varchar(1000)      
+ Declare @TUser varchar(1000)  
+ set @KeyValue = (SELECT KeyFielD FROM vwTableKeys where TableName = @TableName)      
+   Declare @KValue varchar(1000)  
+ IF ((@InsertedJson IS NULL OR @InsertedJson =  '') AND @DeletedJson IS NOT NULL AND  @DeletedJson <> '')      
+ BEGIN      
+       select * INTO #DeleteResultTable from dbo.compare_jsonobject(@DeletedJson,@DeletedJson,@KeyValue) where SideIndicator  In ('==') and TheKey NOT IN ('ROW_VERSION','ORIGIN_ROW_VERSION');         
+    set @KValue = (select top 1 KeyValue from #DeleteResultTable);  
+    set @TUser = (select top 1 TrnUser from #DeleteResultTable);     
+    Insert into tblAuditLog(LogTime, TrnUser, TableName,[Key],FieldName,OldValue,NewValue,DbUser, AppName)  Values( GetDate(),@TUser ,@TableName,@KValue,'',@DeletedJson,'',SUSER_NAME(), APP_NAME());  
+    
+ END      
+ ELSE IF ((@DeletedJson IS NULL OR @DeletedJson =  '') AND @InsertedJson IS NOT NULL AND  @InsertedJson <> '')      
+ BEGIN      
+        select * INTO #InsertResultTable from dbo.compare_jsonobject(@InsertedJson,@InsertedJson,@KeyValue) where SideIndicator  In ('==') and TheKey NOT IN ('ROW_VERSION','ORIGIN_ROW_VERSION');            
+  set @KValue = (select top 1 KeyValue from #InsertResultTable);  
+  set @TUser = (select top 1 TrnUser from #InsertResultTable);     
+  Insert into tblAuditLog(LogTime, TrnUser, TableName,[Key],FieldName,OldValue,NewValue,DbUser, AppName)  Values( GetDate(),@TUser ,@TableName,@KValue,'','',@InsertedJson,SUSER_NAME(), APP_NAME());   
+ END      
+ ELSE       
+ BEGIN      
+    select * INTO #UpdateResultTable from dbo.compare_jsonobject(@InsertedJson,@DeletedJson,@KeyValue) where SideIndicator Not In ('==') and TheKey NOT IN ('ROW_VERSION','ORIGIN_ROW_VERSION','STAMP','TRNUSER');  
+    IF((select count(*) from #UpdateResultTable) > 0)      
+    BEGIN      
+     Insert into tblAuditLog      
+   select GetDate(), CT.TRNUSER TRNUSER,@TableName,IsNull(CT.KeyValue, '') KeyValue, CT.Thekey,CT.TheTargetValue,CT.TheSourceValue,SUSER_NAME() DBUser, APP_NAME() AppName from #UpdateResultTable CT       
+    END      
+ END      
+END TRY       
+BEGIN CATCH       
+ DECLARE @ERROR VARCHAR(MAX)    
+ SELECT @ERROR = ERROR_PROCEDURE() +' | ' + ERROR_MESSAGE();    
+ RAISERROR(@ERROR,10,1) --WITH LOG    
+END CATCH;       
+
+
+
+
+
+
+
