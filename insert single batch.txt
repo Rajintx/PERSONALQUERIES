@@ -1,0 +1,6 @@
+insert into BATCHPRICE_MASTER (
+MCODE	,BATCHCODE,	MRP,	LSP,	SELLRATEBEFORETAX,	STATUS,	STAMP	,CreateBy,COMPANYID)
+select distinct  c.mcode ,'BATCH001',iif(c.vat=1,c.RATE_A*1.13,c.rate_a),null,C.RATE_A,'1',GETDATE(),'Admin','10049'  from MENUITEM c
+where MCODE not in (select mcode from BATCHPRICE_MASTER where batchcode='BATCH001')
+ and type='a'
+
