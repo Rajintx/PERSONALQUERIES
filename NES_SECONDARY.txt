@@ -1,0 +1,98 @@
+ 
+ALTER   PROCEDURE [dbo].[Nes_MASTER_REPORT_SECONDARY]
+	--DECLARE
+        @DATE1 DATETIME,
+		@DATE2 DATETIME,
+		@DISTRIBUTOR VARCHAR(400)='%',
+		@BRAND VARCHAR(2000)='%',
+		@PRODUCT VARCHAR(2000)='%',
+        @SO varchar(200)='%',
+		@ASM VARCHAR(200)='%',
+		@BUSINESSUNIT VARCHAR(200)='%',
+		@SALESMAN varchar(100) ='%',
+		@ROUTE VARCHAR(200)='%',
+		@CHANNEL VARCHAR(2000)='%',
+		@MOTHERPACK VARCHAR(2000)='%'
+   as
+
+  --declare @DATE1 DATETIME='2023-05-01',@DATE2 DATETIME='2023-08-30',@DISTRIBUTOR VARCHAR(400)='%',@CUSTOMER VARCHAR(2000)='%',@BRAND VARCHAR(2000)='%',@PRODUCT VARCHAR(2000)='%' ,@IMPORTER VARCHAR(200)='%',@SO varchar(200)='%',@ASM VARCHAR(200)='%',@BUSINESSUNIT VARCHAR(200)='%',@SALESMAN varchar(100)='0',@ROUTE VARCHAR(200)='%',@CHANNEL VARCHAR(2000)='%',@MOTHERPACK VARCHAR(2000)='%'
+
+		 IF OBJECT_ID('TEMPDB..#TRNMAIN') is not null drop table #TRNMAIN
+	    select VCHRNO,TRNDATE,A.COMPANYID,PARAC,isnull(b.SALESMANID,'') salesmanid,isnull(B.NAME,'') SALESMAN into #TRNMAIN
+	     from TRNMAIN A (nolock) LEFT JOIN SALESMAN B ON A.SALESMANID = B.SALESMANID AND A.COMPANYID = B.COMPANYID   where TRNDATE BETWEEN @DATE1 AND @DATE2  and ((@SALESMAN = '0' and 1=1) or (@SALESMAN <> '0' and a.SALESMANID in (select * from dbo.Split(@SALESMAN,','))))
+
+		 IF OBJECT_ID('TEMPDB..#rmd_aclist') is not null drop table #rmd_aclist
+	     select b.*,ra.ACNAME distributorname,cv.CHANNEL CHANNELname,cv.SUBCHANNEL SUBCHANNELname ,ra.sm salesman , sm.name psm 
+		 into #rmd_aclist
+		 from RMD_ACLIST RA 
+		 right join (SELECT a.companyid,geo,customerID,acname,VATNO,A.ACID,ISNULL(ASM,PARENT) ASM,SO,CHANNEL,SUBCHANNEL,a.ROUTE routecode ,rm.RouteName 
+                       FROM
+        			       (select     ra.ROUTE,ra.companyid,ra.geo,ra.customerID,ra.acname,ra.VATNO,ra.ACID,RA.CHANNEL,RA.SUBCHANNEL,
+        			               case when rc.so like 'L5%' then rc.so end ASM,
+        			               case when ra.so like 'L6%' then ra.so end SO
+                            from RMD_ACLIST RA (nolock) left join RMD_ACLIST rc (nolock) on ra.COMPANYID=rc.customerID
+							where len(ra.COMPANYID)=5 AND RA.ACID LIKE 'PA%' AND RC.ACID LIKE 'PA%'
+                            and ((@DISTRIBUTOR='%' and ra.COMPANYID like '%') or (@DISTRIBUTOR <>'%' and ra.COMPANYID in (select * from dbo.Split(@DISTRIBUTOR,','))))
+                            and ((@SO='%' and ra.SO like '%') or (@SO <>'%' and ra.SO in (select * from dbo.Split(@SO,','))))
+							AND ((@CHANNEL='%' AND ISNULL(RA.CHANNEL,'') LIKE @CHANNEL) OR (@CHANNEL<>'%' AND RA.CHANNEL IN (SELECT * FROM DBO.SPLIT(@CHANNEL,','))))
+        			       )A LEFT JOIN SALESOFFICERMASTER SM (nolock) ON A.SO=SM.NAME
+						   LEFT JOIN ROUTE_MASTER RM ON A.ROUTE = RM.RouteCode and a.COMPANYID = rm.companyid
+        		   )b  on ra.customerID=b.COMPANYID	            
+		left join CHANNEL_VIEW cv on b.channel=cv.ParentChannelCode and b.SUBCHANNEL=cv.ChannelCode
+		left join (SELECT B.SALESMANID,B.NAME,A.RouteCode,A.COMPANYID FROM salesman_route A JOIN SALESMAN B ON A.SALESMANID=B.SALESMANID AND A.COMPANYID = B.COMPANYID) sm on ra.ROUTE = sm.ROUTECODE and ra.companyid  =  sm.companyid 
+		WHERE ((@ASM = '%' AND 1=1) OR (@ASM <> '%' AND B.ASM IN (SELECT * FROM DBO.Split(@ASM,',')))) AND ((@ROUTE =  '%' AND 1=1) OR (@ROUTE<>'%' AND RA.ROUTE IN (SELECT * FROM DBO.Split(@ROUTE,',')))) AND RA.ACID LIKE 'PA%'
+
+		 
+
+        select 	ASM,SO,ISNULL(SM.NAME,PSM) PSM,ra.COMPANYID [Distributor Code],ra.distributorname [Distributor Name],ra.customerID [Customer Code],ra.ACNAME [Customer Name],ra.VATNO [VAT / PAN No.],'SM'+ra.COMPANYID+'-'+cast(tm.salesmanid as varchar(100)) [SM Code] , tm.SALESMAN [SM Name],ra.routecode [Route Code] , ra.routename [Route Name],ra.CHANNELname Channel,ra.SUBCHANNELname [Sub-Channel],DIVISION [Business Unit],
+               Brand,[Product Code],[Product Name], format(sum(secondarydiscount),'n2') [Scheme Discount],format(sum(salesqty),'n2') [Sales Qty (Ea)],format(sum(returnqty),'n2') [Return Qty (Ea)],format(sum(netqty),'n2') [Net Qty (Ea)],format(sum(salesvolume),'n2') [Sales Vol (Kgs)],format(sum(returnvolume),'n2') [Return Vol (Kgs)],format(sum(Volume),'n2') [Net Vol (Kgs)],FORmat(sum(SALESAmount),'n2') [Sales Value],FORmat(sum(SALESVAT),'n2') [Sales Tax],FORmat(sum(RETURNAmount),'n2') [Return Value],FORmat(sum(RETURNVAT),'n2') [Return Tax],FORmat(sum(grossamount),'n2') [Gross Value],FORmat(sum(vat),'n2') Tax,FORmat(sum(amount),'n2') [Net Value],SUM(billcount) [Bills Cut]  
+        from(
+			   select tp.vchrno,tp.PARAC,tp.[Product Code],tp.TRNDATE,tp.Amount,BD.verticalname Brand,BD.division DIVISION,mi.DESCA [Product Name],tp.Quantity,tp.salesman,tp.salesmanid,secondarydiscount,salesqty,returnqty,netqty,salesamount,SALESVAT,RETURNAmount,RETURNVAT,grossamount,vat,
+					  SALESQTY * (CASE WHEN MI.Weighable IN ('GRAM', 'ml', 'gm') THEN CAST(MI.GWEIGHT AS NUMERIC(18,5))/1000 ELSE CAST(MI.GWEIGHT AS NUMERIC(18,5)) END) SALESVOLUME,
+			          RETURNQTY * (CASE WHEN MI.Weighable IN ('GRAM', 'ml', 'gm') THEN CAST(MI.GWEIGHT AS NUMERIC(18,5))/1000 ELSE CAST(MI.GWEIGHT AS NUMERIC(18,5)) END) RETURNVOLUME,
+						NETQTY * (CASE WHEN MI.Weighable IN ('GRAM', 'ml', 'gm') THEN CAST(MI.GWEIGHT AS NUMERIC(18,5)) / 1000 ELSE CAST(MI.GWEIGHT AS NUMERIC(18,5)) END) Volume,
+						billcount,MI.ITEMCOMPANYID
+
+				   from (
+	                 select tp.vchrno,tp.mcode [Product Code],tm.TRNDATE,tm.PARAC,tm.SALESManid,tm.SALESMAN,
+					SUM(CASE WHEN left(tm.VCHRNO, 2) IN ('si', 'ti') THEN TP.RealQty ELSE - TP.REALQTY_IN END) Quantity,
+					SUM(CASE WHEN LEFT(TM.VCHRNO, 2) IN ('SI', 'TI','RR') THEN TP.SecondaryDiscount WHEN LEFT(TM.VCHRNO,2) IN ('CN','RE') THEN -TP.SecondaryDiscount ELSE 0 END) secondarydiscount,
+					SUM(CASE WHEN LEFT(TM.VCHRNO, 2) IN ('SI', 'TI') THEN TP.REALQTY WHEN LEFT(TM.VCHRNO,2) = 'RE' THEN -TP.REALQTY_IN ELSE 0 END) SALESQTY,
+					SUM(CASE WHEN LEFT(TM.VCHRNO, 2) IN ('CN') THEN TP.REALQTY_IN WHEN LEFT(TM.VCHRNO,2) = 'RR' THEN TP.REALQTY ELSE 0 END) RETURNQTY,
+					SUM(CASE WHEN LEFT(TM.VCHRNO, 2) IN ('SI', 'TI','RR') THEN TP.REALQTY WHEN LEFT(TM.VCHRNO,2) IN ('CN','RE') THEN -TP.REALQTY_IN ELSE 0 END) NETQTY,
+					SUM(CASE WHEN left(tm.VCHRNO, 2) IN ('si', 'ti') THEN TP.NETAMOUNT ELSE - TP.NETAMOUNT END) Amount,
+					SUM(CASE WHEN left(tm.VCHRNO, 2) IN ('si', 'ti') THEN TP.AMOUNT WHEN  left(tm.VCHRNO, 2) IN ('RE') THEN - TP.AMOUNT ELSE 0 END) SALESAmount, 
+					SUM(CASE WHEN left(tm.VCHRNO, 2) IN ('CN') THEN TP.AMOUNT WHEN  left(tm.VCHRNO, 2) IN ('RR') THEN - TP.AMOUNT ELSE 0 END) RETURNAmount,
+					SUM(CASE WHEN left(tm.VCHRNO, 2) IN ('si', 'ti') THEN TP.AMOUNT ELSE - TP.AMOUNT END) GROSSAmount,
+					SUM(CASE WHEN left(tm.VCHRNO, 2) IN ('si', 'ti') THEN TP.VAT ELSE - TP.VAT END) VAT,
+					SUM(CASE WHEN left(tm.VCHRNO, 2) IN ('si', 'ti') THEN TP.VAT WHEN  left(tm.VCHRNO, 2) IN ('RE') THEN - TP.VAT ELSE 0 END) SALESVAT, 
+					SUM(CASE WHEN left(tm.VCHRNO, 2) IN ('CN') THEN TP.VAT WHEN  left(tm.VCHRNO, 2) IN ('RR') THEN - TP.VAT ELSE 0 END) RETURNVAT,
+					SUM(CASE WHEN left(tm.VCHRNO, 2) IN ('si', 'ti') THEN TP.VAT ELSE - TP.VAT END) GROSSVAT,
+					sum(case when left(tm.VCHRNO, 2) IN ('si', 'ti') THEN 1 else 0 end) billcount
+                     FROM TRNPROD TP (nolock) join  #TRNMAIN TM ON  TM.VCHRNO=TP.VCHRNO AND TM.COMPANYID=TP.COMPANYID
+        		     WHERE ((@PRODUCT='%' and TP.MCODE like '%') or (@PRODUCT <>'%' and TP.MCODE in (select * from dbo.Split(@PRODUCT,',')))) AND  TP.WAREHOUSE IN ('Main Warehouse')
+				   	 group by tp.vchrno,tp.mcode,tm.TRNDATE,tm.PARAC,tm.SALESManid,tm.SALESMAN
+					)tp
+			        left join 
+				    (select mu.CONFACTOR,mi.MCODE,mi.BRANDCODE,mi.Brand,mi.DESCA,mi.GWEIGHT,mi.Weighable ,MI.COMPANYID ITEMCOMPANYID
+					 from  MENUITEM mi (nolock) join MULTIALTUNIT mu (nolock) on mu.MCODE=mi.mcode and mu.ALTUNIT='CASE'
+     		         where ((@BRAND='%' and  MI.BRANDCODE like '%') or (@BRAND <>'%' and MI.BRANDCODE in (select * from dbo.Split(@BRAND,',')))) 
+				           and ((@PRODUCT='%' and mi.MCODE like '%') or (@PRODUCT <>'%' and mi.MCODE in (select * from dbo.Split(@PRODUCT,','))))
+				    )mi on tp.[Product Code]=mi.MCODE
+					left join (select distinct bd.PARENTBRANDCODE division , bd.brandcode vertical , bd.brandname verticalname, bdd.brandcode , bdd.BrandName from BRAND bd 
+					JOIN BRAND BDD ON BDD.PARENTBRANDCODE = BD.BRANDCODE AND BdD.TYPE = 'BRAND' and BD.TYPE='VERTICAL' ) bd on mi.BRANDCODE = bd.vertical and mi.BRAND = bd.BRANDCODE
+					WHERE ((@BUSINESSUNIT='%' AND ISNULL(BD.division,'') LIKE @BUSINESSUNIT) OR (@BUSINESSUNIT<>'%' AND BD.division IN (SELECT * FROM DBO.Split(@BUSINESSUNIT,','))))
+					AND ((@MOTHERPACK='%' AND ISNULL(BD.BRANDCODE,'') LIKE @MOTHERPACK) OR (@MOTHERPACK <> '%' AND BD.BRANDCODE IN (SELECT * FROM DBO.Split(@MOTHERPACK,','))))
+			)tm join #rmd_aclist  ra on tm.parac=ra.acid 
+			 left join (SELECT B.SALESMANID,B.NAME,A.RouteCode,A.COMPANYID FROM salesman_route A JOIN SALESMAN B ON A.SALESMANID=B.SALESMANID AND A.COMPANYID = B.COMPANYID) sm on ra.routecode = sm.ROUTECODE and    ITEMCOMPANYID  =  sm.companyid 
+			group by ASM,SO,PSM,ra.COMPANYID ,ra.distributorname ,ra.customerID ,ra.ACNAME ,ra.VATNO ,tm.salesmanid  , tm.SALESMAN ,ra.routecode  , ra.routename ,ra.CHANNELname ,ra.SUBCHANNELname ,
+               Brand,DIVISION,[Product Code],[Product Name],sm.[name]
+		order by [Distributor Name] asc,[Customer Name] asc,[Product Name] asc
+
+		
+		
+		IF OBJECT_ID('TEMPDB..#TRNMAIN') is not null drop table #TRNMAIN
+		IF OBJECT_ID('TEMPDB..#rmd_aclist') is not null drop table #rmd_aclist
+
+		
+
