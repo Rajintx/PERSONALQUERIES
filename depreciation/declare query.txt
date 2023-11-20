@@ -1,0 +1,14 @@
+--insert 
+
+										insert into DefaultReportFormat
+										select  'DEPRECIATION  REPORT AS PER COMPANY NORMS ' , 'DEPRECIATION  REPORT AS PER COMPANY NORMS_1' ,'WSP_DEPRECIATION_COMPANY_NORMS',''
+
+
+
+
+
+--declare
+
+
+
+										declare @reportname varchar(max)    declare @procname varchar(max)  set @reportname = 'DEPRECIATION  REPORT AS PER COMPANY NORMS_1'    set @procname = 'WSP_DEPRECIATION_COMPANY_NORMS'  delete from REPORTMASTER where reportname = @reportname  delete from reportdetails where reportname = @reportname  exec CREATE_REPORT @reportname, @procname, null, null, null  
