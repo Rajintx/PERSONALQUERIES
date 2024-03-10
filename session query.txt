@@ -1,0 +1,5 @@
+SELECT
+    s.[text] AS query_text
+FROM sys.dm_exec_requests AS r
+CROSS APPLY sys.dm_exec_sql_text(r.sql_handle) AS s
+WHERE r.session_id = 75   
